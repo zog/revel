@@ -58,8 +58,17 @@ func mustRenderTemplate(destPath, srcPath string, data map[string]interface{}) {
 // ".template" are treated as a Go template and rendered using the given data.
 // Additionally, the trailing ".template" is stripped from the file name.
 // Also, dot files and dot directories are skipped.
-func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
-	return filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+func mustCopyDir(destDir, srcDir string, data map[string]interface{}) {
+	_mustCopyDir(destDir, srcDir, data, true)
+}
+
+// Same as mustCopyDir except does not copy subdirectories.
+func mustCopyDirContents(destDir, srcDir string) {
+	_mustCopyDir(destDir, srcDir, nil, false)
+}
+
+func _mustCopyDir(destDir, srcDir string, data map[string]interface{}, recurse bool) {
+	err := filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 		// Get the relative path from the source base, and the corresponding path in
 		// the dest directory.
 		relSrcPath := strings.TrimLeft(srcPath[len(srcDir):], string(os.PathSeparator))
@@ -75,6 +84,9 @@ func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
 
 		// Create a subdirectory if necessary.
 		if info.IsDir() {
+			if !recurse && srcPath != srcDir {
+				return filepath.SkipDir
+			}
 			err := os.MkdirAll(path.Join(destDir, relSrcPath), 0777)
 			if !os.IsExist(err) {
 				panicOnError(err, "Failed to create directory")
@@ -92,6 +104,9 @@ func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
 		mustCopyFile(destPath, srcPath)
 		return nil
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func mustZipDir(destFilename, srcDir string) string {

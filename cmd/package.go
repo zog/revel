@@ -29,7 +29,7 @@ func init() {
 
 func packageApp(args []string) {
 	if len(args) == 0 {
-		fmt.Fprint(os.Stderr, cmdPackage.Long)
+		tmpl(os.Stderr, helpTemplate, cmdPackage)
 		return
 	}
 

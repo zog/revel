@@ -31,6 +31,7 @@ var commands = []*Command{
 	cmdClean,
 	cmdPackage,
 	cmdTest,
+	cmdGae,
 }
 
 func main() {

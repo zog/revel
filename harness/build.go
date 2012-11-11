@@ -15,6 +15,7 @@ import (
 )
 
 var importErrorPattern = regexp.MustCompile("import \"([^\"]+)\": cannot find package")
+var AppEngine bool
 
 // Build the app:
 // 1. Generate the the main.go file.
@@ -34,6 +35,7 @@ func Build() (app *App, compileError *rev.Error) {
 		"ValidationKeys": sourceInfo.ValidationKeys,
 		"ImportPaths":    calcImportAliases(sourceInfo),
 		"TestSuites":     sourceInfo.TestSuites,
+		"AppEngine":      AppEngine,
 	})
 
 	// Create a fresh temp dir.
@@ -209,7 +211,7 @@ func newCompileError(output []byte) *rev.Error {
 	return compileError
 }
 
-const REGISTER_CONTROLLERS = `package main
+const REGISTER_CONTROLLERS = `package {{if .AppEngine}}tmp{{else}}main{{end}}
 
 import (
 	"flag"
@@ -228,7 +230,7 @@ var (
 	_ = reflect.Invalid
 )
 
-func main() {
+func {{if .AppEngine}}init{{else}}main{{end}}() {
 	rev.INFO.Println("Running revel server")
 	flag.Parse()
 	rev.Init(*runMode, *importPath, *srcPath)
