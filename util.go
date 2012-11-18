@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 )
@@ -48,19 +47,6 @@ func ContainsString(list []string, target string) bool {
 		}
 	}
 	return false
-}
-
-// Return the reflect.Method, given a Receiver type and Func value.
-func FindMethod(recvType reflect.Type, funcVal *reflect.Value) *reflect.Method {
-	// It is not possible to get the name of the method from the Func.
-	// Instead, compare it to each method of the Controller.
-	for i := 0; i < recvType.NumMethod(); i++ {
-		method := recvType.Method(i)
-		if method.Func == *funcVal {
-			return &method
-		}
-	}
-	return nil
 }
 
 var (

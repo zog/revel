@@ -273,11 +273,11 @@ func getRedirectUrl(item interface{}) (string, error) {
 
 	// Handle funcs
 	val := reflect.ValueOf(item)
-	typ := reflect.TypeOf(item)
+	typ := val.Type()
 	if typ.Kind() == reflect.Func && typ.NumIn() > 0 {
 		// Get the Controller Method
 		recvType := typ.In(0)
-		method := FindMethod(recvType, &val)
+		method := FindMethod(recvType, val)
 		if method == nil {
 			return "", errors.New("couldn't find method")
 		}

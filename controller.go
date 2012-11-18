@@ -274,17 +274,3 @@ func (c *Controller) RenderFile(file *os.File, delivery ContentDisposition) Resu
 		Delivery: delivery,
 	}
 }
-
-// Redirect to an action or to a URL.
-//   c.Redirect(Controller.Action)
-//   c.Redirect("/controller/action")
-//   c.Redirect("/controller/%d/action", id)
-func (c *Controller) Redirect(val interface{}, args ...interface{}) Result {
-	if url, ok := val.(string); ok {
-		if len(args) == 0 {
-			return &RedirectToUrlResult{url}
-		}
-		return &RedirectToUrlResult{fmt.Sprintf(url, args...)}
-	}
-	return &RedirectToActionResult{val}
-}

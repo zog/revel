@@ -69,6 +69,11 @@ func gaeApp(args []string) {
 			continue
 		}
 
+		// Skip the fsnotify package explicitly.
+		if pkg.Name == "fsnotify" {
+			continue
+		}
+
 		deps = append(deps, dep)
 
 		// Add this package's imports to the search queue.
