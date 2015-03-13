@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"bytes"
 	"github.com/realistschuckle/gohaml"
 )
 
@@ -175,6 +176,16 @@ var (
 		},
 		"slug": Slug,
 		"even": func(a int) bool { return (a % 2) == 0 },
+		"layout": func(name string, renderArgs map[string]interface{}) template.HTML {
+			layout, err := MainTemplateLoader.Template("layouts/" + name + ".haml")
+			if err != nil {
+				layout, err = MainTemplateLoader.Template("layouts/" + name + ".html")
+			}
+			var out bytes.Buffer
+			layout.Render(&out, renderArgs)
+			res := out.String()
+			return template.HTML(res)
+		},
 	}
 )
 
@@ -273,7 +284,6 @@ func (loader *TemplateLoader) Refresh() *Error {
 
 			// addTemplate loads a template file into the Go template loader so it can be rendered later
 			addTemplate := func(templateName string) (err error) {
-				TRACE.Println("adding template: ", templateName)
 				// Convert template names to use forward slashes, even on Windows.
 				if os.PathSeparator == '\\' {
 					templateName = strings.Replace(templateName, `\`, `/`, -1) // `
@@ -293,8 +303,18 @@ func (loader *TemplateLoader) Refresh() *Error {
 						ERROR.Println("Failed reading file:", path)
 						return nil
 					}
-
 					fileStr = string(fileBytes)
+				}
+
+				nameSplit := strings.Split(templateName, ".")
+				if len(nameSplit) >= 2 {
+					extension := nameSplit[len(nameSplit)-1]
+					if(extension == "haml"){
+						var scope = make(map[string]interface{})
+			      scope["lang"] = "HAML"
+			      engine, _ := gohaml.NewEngine(fileStr)
+			      fileStr = engine.Render(scope)
+					}
 				}
 
 				if templateSet == nil {
@@ -319,16 +339,7 @@ func (loader *TemplateLoader) Refresh() *Error {
 							// Reset to default otherwise
 							templateSet.Delims("", "")
 						}
-						nameSplit := strings.Split(templateName, ".")
-						if len(nameSplit) >= 2 {
-							extension := nameSplit[len(nameSplit)-1]
-							if(extension == "haml"){
-								var scope = make(map[string]interface{})
-					      scope["lang"] = "HAML"
-					      engine, _ := gohaml.NewEngine(fileStr)
-					      fileStr = engine.Render(scope)
-							}
-						}
+
 						_, err = templateSet.Parse(fileStr)
 					}()
 
