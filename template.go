@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/realistschuckle/gohaml"
 )
 
 var ERROR_CLASS = "hasError"
@@ -317,6 +318,16 @@ func (loader *TemplateLoader) Refresh() *Error {
 						} else {
 							// Reset to default otherwise
 							templateSet.Delims("", "")
+						}
+						nameSplit := strings.Split(templateName, ".")
+						if len(nameSplit) >= 2 {
+							extension := nameSplit[len(nameSplit)-1]
+							if(extension == "haml"){
+								var scope = make(map[string]interface{})
+					      scope["lang"] = "HAML"
+					      engine, _ := gohaml.NewEngine(fileStr)
+					      fileStr = engine.Render(scope)
+							}
 						}
 						_, err = templateSet.Parse(fileStr)
 					}()
