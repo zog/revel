@@ -97,6 +97,13 @@ func (c *Controller) Render(extraRenderArgs ...interface{}) Result {
 			"(Action", c.Action, ")")
 	}
 
+	if c.Request.Format == "html" {
+    candidate := c.Name + "/" + c.MethodType.Name + ".haml"
+    if _, err := MainTemplateLoader.Template(candidate); err == nil {
+      return c.RenderTemplate(candidate)
+    }
+  }
+
 	return c.RenderTemplate(c.Name + "/" + c.MethodType.Name + "." + c.Request.Format)
 }
 
