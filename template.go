@@ -176,11 +176,35 @@ var (
 		},
 		"slug": Slug,
 		"even": func(a int) bool { return (a % 2) == 0 },
+		"content": func(renderArgs map[string]interface{}) template.HTML {
+			name := renderArgs["ContentTemplate"].(string)
+			tpl, _ := MainTemplateLoader.Template(name)
+			var out bytes.Buffer
+			tpl.Render(&out, renderArgs)
+			res := out.String()
+			return template.HTML(res)
+		},
 		"layout": func(name string, renderArgs map[string]interface{}) template.HTML {
 			layout, err := MainTemplateLoader.Template("layouts/" + name + ".haml")
 			if err != nil {
 				layout, err = MainTemplateLoader.Template("layouts/" + name + ".html")
 			}
+			if err != nil {
+				var out bytes.Buffer
+
+				ERROR.Println("Missing layout: ", name)
+				// error := ErrorResult{fmt.Errorf("Server Error:\n\n"+
+				// 	"Missing layout: \n%s", name)}
+				tmpl, _ := MainTemplateLoader.Template("errors/500.html")
+				revelError := &Error{
+					Title:       "Server Error",
+					Description: fmt.Sprintf("Missing layout: %s", name),
+				}
+				renderArgs["Error"] = revelError
+				tmpl.Render(&out, renderArgs)
+				return template.HTML(out.String())
+			}
+
 			var out bytes.Buffer
 			layout.Render(&out, renderArgs)
 			res := out.String()

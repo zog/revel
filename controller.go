@@ -97,14 +97,16 @@ func (c *Controller) Render(extraRenderArgs ...interface{}) Result {
 			"(Action", c.Action, ")")
 	}
 
+	cName := c.Name
+	cName = strings.Replace(cName, "Controller", "", -1)
 	if c.Request.Format == "html" {
-    candidate := c.Name + "/" + c.MethodType.Name + ".haml"
+    candidate := cName + "/" + c.MethodType.Name + ".haml"
     if _, err := MainTemplateLoader.Template(candidate); err == nil {
       return c.RenderTemplate(candidate)
     }
   }
 
-	return c.RenderTemplate(c.Name + "/" + c.MethodType.Name + "." + c.Request.Format)
+	return c.RenderTemplate(cName + "/" + c.MethodType.Name + "." + c.Request.Format)
 }
 
 // A less magical way to render a template.
