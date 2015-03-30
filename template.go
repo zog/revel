@@ -178,18 +178,34 @@ var (
 		"even": func(a int) bool { return (a % 2) == 0 },
 		"content": func(renderArgs map[string]interface{}) template.HTML {
 			name := renderArgs["ContentTemplate"].(string)
+			fmt.Println(name)
 			tpl, _ := MainTemplateLoader.Template(name)
 			var out bytes.Buffer
-			tpl.Render(&out, renderArgs)
+			err := tpl.Render(&out, renderArgs)
+			if err != nil {
+				var out bytes.Buffer
+
+				tmpl, _ := MainTemplateLoader.Template("errors/500.html")
+				revelError := &Error{
+					Title:       "Server Error",
+					Description: err.Error(),
+				}
+				renderArgs["Error"] = revelError
+				tmpl.Render(&out, renderArgs)
+				return template.HTML(out.String())
+			}
 			res := out.String()
 			return template.HTML(res)
 		},
-		"layout": func(name string, renderArgs map[string]interface{}) template.HTML {
+		"layout": func(name string, contentName string, renderArgs map[string]interface{}) template.HTML {
+			renderArgs["ContentTemplate"] = contentName
 			layout, err := MainTemplateLoader.Template("layouts/" + name + ".haml")
 			if err != nil {
 				layout, err = MainTemplateLoader.Template("layouts/" + name + ".html")
 			}
 			if err != nil {
+				fmt.Println(renderArgs)
+
 				var out bytes.Buffer
 
 				ERROR.Println("Missing layout: ", name)
@@ -206,7 +222,18 @@ var (
 			}
 
 			var out bytes.Buffer
-			layout.Render(&out, renderArgs)
+			err = layout.Render(&out, renderArgs)
+			if err != nil {
+				var out bytes.Buffer
+				tmpl, _ := MainTemplateLoader.Template("errors/500.html")
+				revelError := &Error{
+					Title:       "Server Error",
+					Description: err.Error(),
+				}
+				renderArgs["Error"] = revelError
+				tmpl.Render(&out, renderArgs)
+				return template.HTML(out.String())
+			}
 			res := out.String()
 			return template.HTML(res)
 		},
@@ -336,8 +363,17 @@ func (loader *TemplateLoader) Refresh() *Error {
 					if(extension == "haml"){
 						var scope = make(map[string]interface{})
 			      scope["lang"] = "HAML"
+
+			      re := regexp.MustCompile("\"(.*)#{(.*?)}(.*)\"")
+			      fileStr = re.ReplaceAllString(fileStr, "\"${1}__[[__${2}__]]__${3}\"")
+			      re = regexp.MustCompile("(.*__\\[\\[__.*),(.*__\\]\\]__.*)")
+			      fileStr = re.ReplaceAllString(fileStr, "${1}__888__${2}")
 			      engine, _ := gohaml.NewEngine(fileStr)
+			      fmt.Println(fileStr)
 			      fileStr = engine.Render(scope)
+			      fileStr = strings.Replace(fileStr, "__[[__", "{{", -1)
+			      fileStr = strings.Replace(fileStr, "__]]__", "}}", -1)
+			      fileStr = strings.Replace(fileStr, "__888__", ",", -1)
 					}
 				}
 
