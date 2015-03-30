@@ -572,3 +572,4 @@ func Slug(text string) string {
 	text = strings.Trim(text, separator)
 	return text
 }
+
