@@ -180,12 +180,40 @@ var (
 		"even": func(a int) bool { return (a % 2) == 0 },
 		"content": func(renderArgs map[string]interface{}) template.HTML {
 			name := renderArgs["ContentTemplate"].(string)
-			fmt.Println(name)
-			tpl, _ := MainTemplateLoader.Template(name)
+			layoutName := renderArgs["LayoutTemplate"].(string)
+
+			layout, err := MainTemplateLoader.Template("layouts/" + layoutName + ".haml")
+			if err != nil {
+				layout, err = MainTemplateLoader.Template("layouts/" + layoutName + ".html")
+			}
+
+			var tpl *template.Template
+			for _, t := range layout.(GoTemplate).Templates(){
+				if(t.Name() == name){
+					tpl = t
+				}
+			}
+
+			if(tpl == nil){
+				ERROR.Println("Missing template: ", name)
+				// error := ErrorResult{fmt.Errorf("Server Error:\n\n"+
+				// 	"Missing layout: \n%s", name)}
+				var out bytes.Buffer
+				tmpl, _ := MainTemplateLoader.Template("errors/500.html")
+				revelError := &Error{
+					Title:       "Server Error",
+					Description: fmt.Sprintf("Missing template: %s \n Present templates: %s", name, MainTemplateLoader),
+				}
+				renderArgs["Error"] = revelError
+				tmpl.Render(&out, renderArgs)
+				return template.HTML(out.String())
+			}
+
 			var out bytes.Buffer
-			err := tpl.Render(&out, renderArgs)
+			err = GoTemplate{tpl, MainTemplateLoader}.Render(&out, renderArgs)
 			if err != nil {
 				var out bytes.Buffer
+				fmt.Println(err)
 
 				tmpl, _ := MainTemplateLoader.Template("errors/500.html")
 				revelError := &Error{
@@ -201,13 +229,12 @@ var (
 		},
 		"layout": func(name string, contentName string, renderArgs map[string]interface{}) template.HTML {
 			renderArgs["ContentTemplate"] = contentName
+			renderArgs["LayoutTemplate"] = name
 			layout, err := MainTemplateLoader.Template("layouts/" + name + ".haml")
 			if err != nil {
 				layout, err = MainTemplateLoader.Template("layouts/" + name + ".html")
 			}
 			if err != nil {
-				fmt.Println(renderArgs)
-
 				var out bytes.Buffer
 
 				ERROR.Println("Missing layout: ", name)
@@ -236,6 +263,7 @@ var (
 				tmpl.Render(&out, renderArgs)
 				return template.HTML(out.String())
 			}
+
 			res := out.String()
 			return template.HTML(res)
 		},
@@ -374,7 +402,7 @@ func (loader *TemplateLoader) Refresh() *Error {
 			      re = regexp.MustCompile("(.*__\\[\\[__.*),(.*__\\]\\]__.*)")
 			      fileStr = re.ReplaceAllString(fileStr, "${1}__888__${2}")
 			      engine, _ := gohaml.NewEngine(fileStr)
-			      fmt.Println(fileStr)
+			      // fmt.Println(fileStr)
 			      fileStr = engine.Render(scope)
 			      fileStr = strings.Replace(fileStr, "__[[__", "{{", -1)
 			      fileStr = strings.Replace(fileStr, "__]]__", "}}", -1)
