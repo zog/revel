@@ -326,6 +326,7 @@ func findControllers(appControllerType reflect.Type) (indexes [][]int) {
 			elemType = elem.Type()
 		)
 		if elemType.Kind() == reflect.Ptr {
+			fmt.Println(elem)
 			elem = elem.Elem()
 			elemType = elem.Type()
 		}

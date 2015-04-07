@@ -227,6 +227,7 @@ var (
 			res := out.String()
 			return template.HTML(res)
 		},
+
 		"layout": func(name string, contentName string, renderArgs map[string]interface{}) template.HTML {
 			renderArgs["ContentTemplate"] = contentName
 			renderArgs["LayoutTemplate"] = name
@@ -397,8 +398,13 @@ func (loader *TemplateLoader) Refresh() *Error {
 						var scope = make(map[string]interface{})
 			      scope["lang"] = "HAML"
 
-			      re := regexp.MustCompile("\"(.*)#{(.*?)}(.*)\"")
-			      fileStr = re.ReplaceAllString(fileStr, "\"${1}__[[__${2}__]]__${3}\"")
+			      re := regexp.MustCompile("\"(.*?)\"")
+			      fileStr = re.ReplaceAllStringFunc(fileStr, func(str string) (string){
+				      re := regexp.MustCompile("#{(.*?)}")
+				      str = re.ReplaceAllString(str, "__[[__${1}__]]__")
+			      	return str
+			      })
+
 			      re = regexp.MustCompile("(.*__\\[\\[__.*),(.*__\\]\\]__.*)")
 			      fileStr = re.ReplaceAllString(fileStr, "${1}__888__${2}")
 			      engine, _ := gohaml.NewEngine(fileStr)
