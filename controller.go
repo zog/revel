@@ -116,6 +116,7 @@ func (c *Controller) Render(extraRenderArgs ...interface{}) Result {
     }
   }
 
+
 	return c.RenderTemplate(cName + "/" + c.MethodType.Name + "." + c.Request.Format)
 }
 

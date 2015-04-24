@@ -107,6 +107,7 @@ func (router *Router) Route(req *http.Request) *RouteMatch {
 	}
 
 	leaf, expansions := router.Tree.Find(treePath(req.Method, req.URL.Path))
+
 	if leaf == nil {
 		return nil
 	}

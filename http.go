@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"regexp"
 
 	"golang.org/x/net/websocket"
 )
@@ -70,6 +71,26 @@ func ResolveContentType(req *http.Request) string {
 // returning a default of "html" when Accept header cannot be mapped to a
 // value above.
 func ResolveFormat(req *http.Request) string {
+
+	formatRegexp := regexp.MustCompile("\\.\\w+$")
+	formatInURL := formatRegexp.FindString(req.URL.Path)
+	var format string
+	if(len(formatInURL) > 0){
+		str := strings.ToLower(formatInURL); switch {
+		case str == ".json":
+			format = "json"
+		case str == ".txt":
+			req.URL.Path = formatRegexp.ReplaceAllString(req.URL.Path, "")
+			format = "txt"
+		case str == ".xml":
+			format = "xml"
+		}
+	}
+	if(len(format) > 0){
+		req.URL.Path = formatRegexp.ReplaceAllString(req.URL.Path, "")
+		return format
+	}
+
 	accept := req.Header.Get("accept")
 
 	switch {
