@@ -401,18 +401,19 @@ func (loader *TemplateLoader) Refresh() *Error {
 			      re := regexp.MustCompile("\"(.*?)\"")
 			      fileStr = re.ReplaceAllStringFunc(fileStr, func(str string) (string){
 				      re := regexp.MustCompile("#{(.*?)}")
-				      str = re.ReplaceAllString(str, "__[[__${1}__]]__")
+				      str = re.ReplaceAllString(str, "__7777__${1}__9999__")
 			      	return str
 			      })
 
-			      re = regexp.MustCompile("(.*__\\[\\[__.*),(.*__\\]\\]__.*)")
-			      fileStr = re.ReplaceAllString(fileStr, "${1}__888__${2}")
+			      re = regexp.MustCompile("\"(.*?__7777__.*?),([^\"]*?__9999__.*?)\"")
+			      fileStr = re.ReplaceAllString(fileStr, "\"${1}__888__${2}\"")
+				    // fmt.Println(fileStr)
 			      engine, _ := gohaml.NewEngine(fileStr)
-			      // fmt.Println(fileStr)
 			      fileStr = engine.Render(scope)
-			      fileStr = strings.Replace(fileStr, "__[[__", "{{", -1)
-			      fileStr = strings.Replace(fileStr, "__]]__", "}}", -1)
+			      fileStr = strings.Replace(fileStr, "__7777__", "{{", -1)
+			      fileStr = strings.Replace(fileStr, "__9999__", "}}", -1)
 			      fileStr = strings.Replace(fileStr, "__888__", ",", -1)
+			      // fmt.Println(fileStr)
 					}
 				}
 
